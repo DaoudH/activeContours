@@ -1,0 +1,9 @@
+data:
+    images:
+        lena: ../data/lena.jpg
+        
+render:
+    maxwidth: 200
+    quick: True
+        
+verbose: True
