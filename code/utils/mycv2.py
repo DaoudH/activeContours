@@ -20,7 +20,10 @@ PARAMS = yaml.load(open("params.yaml"))
 # This function of course conserves proportions.
 def show(image, maxwidth = np.nan):
     if(PARAMS["render"]["quick"]):
-        plt.imshow(image)
+        if(len(image.shape) == 3):
+            plt.imshow(image)
+        else:
+            plt.imshow(image, cmap = "gray")
         plt.show()
     else:
         if(np.isnan(maxwidth)):

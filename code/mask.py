@@ -15,23 +15,50 @@ verbose = yaml.load(open("params.yaml"))["verbose"]
 class Mask:
     
     def __init__(self, image):
-        self.mask = self.initializeMask(image)
+        if(len(image.shape) == 2):
+            self.n = 1
+        else:
+            self.n = image.shape[-1]
+        self.image = image
+        self.mask = self.initializeMask()
         
-    def initializeMask(self, image):
-        windows = Windows(image)
+    def initializeMask(self):
+        windows = Windows(self.image, self.n)
         return windows.mask
     
+    def area(self):
+        return self.mask.sum() / (self.mask.shape[0] * self.mask.shape[0])
+    
+    def N(self, z):
+        N = 0
+        for i in range(self.image.shape[0]):
+            for j in range(self.image.shape[1]):
+                if(self.mask[i, j]):
+                    if(self.image[i, j] == z):
+                        N += 1
+        return N
+    
+    def p(self, z):
+        return self.N(z) / self.area
+    
+    def H(self, Z, Q, lambd):
+        return [self.N(Z[i])*Q[i] for i in range(len(Z))].sum() - lambd * self.area()
     
 class Windows():
     
-    def __init__(self, image):
+    def __init__(self, image, n):
         self.image = image
+        self.n = n
         # Création de la fenêtre principale (main window)
         Mywindows = tk.Tk()
         Mywindows.title('Image')
         
         # Création d'un widget Canvas (zone graphique)
-        self.height, self.width, no_channels = image.shape
+        if(self.n == 1):
+            self.height, self.width = image.shape
+        else:
+            self.height, self.width, _ = image.shape
+            
         self.canvas = tk.Canvas(Mywindows, width = self.width, height = self.height, bg = "white")
         photo = ImageTk.PhotoImage(image=Image.fromarray(image))
         self.canvas.create_image(0, 0, image=photo, anchor=tk.NW)
@@ -83,10 +110,16 @@ class Windows():
             plt.figure(figsize = (10, 30))
             plt.subplot(131)
             plt.imshow(hull, cmap = "gray")
+            plt.title("Hull")
             plt.subplot(132)
             plt.imshow(self.mask, cmap = "gray")
+            plt.title("Mask")
             plt.subplot(133)
-            plt.imshow(self.image, cmap = "gray")
+            if(self.n == 1):
+                plt.imshow(self.image * self.mask, cmap = "gray")
+            else:
+                plt.imshow(self.image * np.array([self.mask for i in range(self.n)]).transpose(1, 2, 0), cmap = "gray")
+            plt.title("Masked image")
             plt.show()
         
     def showHull(self):
