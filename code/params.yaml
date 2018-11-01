@@ -2,6 +2,12 @@ data:
     images:
         lena: ../data/lena.jpg
         
+    video:
+        movingcable: ../data/movingcable.mp4
+        
+activeContours:
+    maxwidth: 500
+        
 render:
     maxwidth: 200
     quick: True

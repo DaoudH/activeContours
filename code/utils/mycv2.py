@@ -18,17 +18,15 @@ PARAMS = yaml.load(open("params.yaml"))
 # @param image The image.
 # @param maxwidth The maximum width of the image.
 # This function of course conserves proportions.
-def show(image, maxwidth = np.nan):
+def show(image):
     if(PARAMS["render"]["quick"]):
         if(len(image.shape) == 3):
-            plt.imshow(image)
+            plt.imshow(cvtBGRtoRGB(image))
         else:
             plt.imshow(image, cmap = "gray")
         plt.show()
     else:
-        if(np.isnan(maxwidth)):
-            maxwidth = PARAMS["render"]["maxwidth"]
-        cv2.imshow('image',cv2.resize(image, (maxwidth, int(maxwidth * image.shape[0] / image.shape[1]))))
+        cv2.imshow('image', resize(image))
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
@@ -43,8 +41,19 @@ def loadImage(path):
         print("Done")
     return image
 
+def resize(image, maxwidth = np.nan):
+    if(np.isnan(maxwidth)):
+        maxwidth = PARAMS["render"]["maxwidth"]
+    return cv2.resize(image, (maxwidth, int(maxwidth * image.shape[0] / image.shape[1])))
+
 ## Convert an RGB image in a grayscale image.
 # @param image The image.
 # @return The grayscaled image.
 def cvtGray(image):
     return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) #Convert to gray
+
+## Convert an RGB image in a grayscale image.
+# @param image The image.
+# @return The grayscaled image.
+def cvtBGRtoRGB(image):
+    return cv2.cvtColor(image, cv2.COLOR_BGR2RGB) #Convert to gray

@@ -8,6 +8,7 @@ Created on Mon Oct 29 19:16:07 2018
 import tkinter as tk
 from PIL import Image, ImageTk
 import numpy as np
+import mycv2 as mycv2
 import matplotlib.pyplot as plt
 import yaml
 verbose = yaml.load(open("params.yaml"))["verbose"]
@@ -20,11 +21,11 @@ class Mask:
         else:
             self.n = image.shape[-1]
         self.image = image
-        self.mask = self.initializeMask()
+        self.hull, self.mask = self.initializeMask()
         
     def initializeMask(self):
         windows = Windows(self.image, self.n)
-        return windows.mask
+        return windows.hull, windows.mask
     
     def area(self):
         return self.mask.sum() / (self.mask.shape[0] * self.mask.shape[0])
@@ -47,7 +48,7 @@ class Mask:
 class Windows():
     
     def __init__(self, image, n):
-        self.image = image
+        self.image = mycv2.cvtBGRtoRGB(image)
         self.n = n
         # Création de la fenêtre principale (main window)
         Mywindows = tk.Tk()
@@ -60,7 +61,7 @@ class Windows():
             self.height, self.width, _ = image.shape
             
         self.canvas = tk.Canvas(Mywindows, width = self.width, height = self.height, bg = "white")
-        photo = ImageTk.PhotoImage(image=Image.fromarray(image))
+        photo = ImageTk.PhotoImage(image=Image.fromarray(self.image))
         self.canvas.create_image(0, 0, image=photo, anchor=tk.NW)
         self.canvas.pack(padx = 5, pady = 5)
         self.canvas.bind('<Button-1>', self.clic)
@@ -104,12 +105,12 @@ class Windows():
                 
         mask += hull
         self.mask = np.minimum(mask, 1).transpose()
-        hull = hull.transpose()
+        self.hull = hull.transpose()
         
         if(verbose):
             plt.figure(figsize = (10, 30))
             plt.subplot(131)
-            plt.imshow(hull, cmap = "gray")
+            plt.imshow(self.hull, cmap = "gray")
             plt.title("Hull")
             plt.subplot(132)
             plt.imshow(self.mask, cmap = "gray")
@@ -118,7 +119,7 @@ class Windows():
             if(self.n == 1):
                 plt.imshow(self.image * self.mask, cmap = "gray")
             else:
-                plt.imshow(self.image * np.array([self.mask for i in range(self.n)]).transpose(1, 2, 0), cmap = "gray")
+                plt.imshow(self.image * np.array([self.mask for i in range(self.n)]).transpose(1, 2, 0))
             plt.title("Masked image")
             plt.show()
         
