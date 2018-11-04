@@ -7,8 +7,10 @@ Created on Tue Oct 30 22:50:34 2018
 
 import cv2
 import numpy as np
-video=cv2.VideoCapture("../test.mp4") #Path à modifier
-_,firstimage=video.read() #recupérer la première image de la vidéo
+
+video=cv2.VideoCapture("../video/test.mp4") #Path à modifier
+success,firstimage=video.read() #recupérer la première image de la vidéo
+print(firstimage)
 x=195 #coordonnée x du point gauche haut  de l'objet à suivre
 y=120#coordonnée y du point gauche haut de l'objet à suivre 
 width=100 #largeur de l'objet

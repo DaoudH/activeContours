@@ -9,6 +9,7 @@ import tkinter as tk
 from PIL import Image, ImageTk
 import numpy as np
 import mycv2 as mycv2
+from contour import Contour
 import matplotlib.pyplot as plt
 import yaml
 verbose = yaml.load(open("params.yaml"))["verbose"]
@@ -21,11 +22,11 @@ class Mask:
         else:
             self.n = image.shape[-1]
         self.image = image
-        self.hull, self.mask = self.initializeMask()
+        self.contour, self.mask = self.initializeMask()
         
     def initializeMask(self):
         windows = Windows(self.image, self.n)
-        return windows.hull, windows.mask
+        return windows.contour, windows.mask
     
     def area(self):
         return self.mask.sum() / (self.mask.shape[0] * self.mask.shape[0])
@@ -83,34 +84,30 @@ class Windows():
         self.lines = []
         
     def computeMask(self):
-        hull = np.zeros((self.width, self.height))
-            
-        for c in range(len(self.corners)):
-            c1, c2 = self.corners[c], self.corners[(c + 1) % len(self.corners)]
-            for alpha in np.linspace(0, 1, 2*max(self.width, self.height)):
-                hull[int(c1[0] + alpha * (c2[0] - c1[0])), int(c1[1] + alpha * (c2[1] - c1[1]))] = 1
+        
+        contour = Contour(self.corners, (self.width, self.height))
         
         mask = np.zeros((self.width, self.height))
         
         for px in range(self.width):
-            cur = hull[px, 0]
+            cur = contour.array[0, px]
             toAdd = np.zeros((self.width, self.height))
             for py in range(self.height):
-                if(hull[px, py] == 1 and py != 0 and hull[px, py - 1] == 0):
+                if(contour.array[py, px] == 1 and py != 0 and contour.array[py - 1, px] == 0):
                     cur = (cur + 1) % 2
                 toAdd[px, py] = cur
                 
             if(cur != 1):
                 mask += toAdd
                 
-        mask += hull
+        mask += contour.array.transpose()
         self.mask = np.minimum(mask, 1).transpose()
-        self.hull = hull.transpose()
+        self.contour = contour
         
         if(verbose):
             plt.figure(figsize = (10, 30))
             plt.subplot(131)
-            plt.imshow(self.hull, cmap = "gray")
+            plt.imshow(self.contour.array, cmap = "gray")
             plt.title("Hull")
             plt.subplot(132)
             plt.imshow(self.mask, cmap = "gray")
