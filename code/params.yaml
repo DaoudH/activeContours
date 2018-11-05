@@ -6,10 +6,12 @@ data:
         movingcable: ../data/movingcable.mp4
         
 activeContours:
-    maxwidth: 500
+    maxwidth: 1000
+    encodeColors: 1
         
 render:
     maxwidth: 200
     quick: True
         
 verbose: True
+debug: False

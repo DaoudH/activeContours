@@ -8,54 +8,77 @@ Created on Sun Nov  4 23:20:08 2018
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+import yaml
+verbose = yaml.load(open("params.yaml"))["verbose"]
+debug = yaml.load(open("params.yaml"))["debug"]
 
 class Contour:
     
     def __init__(self, points, shape):
-        self.contourFromPoints(points, shape)
         self.shape= shape
+        self.contourFromPoints(points, shape)
+        
         self.npoints = len(self.points)
         self.computeNormals()
         
-    def checkPoints(self, points):
-        newpoints = []
+    def cleanPoints(self, points):
+        without_duplicates = []
         for c in range(len(points)):
             c1, c2 = points[c], points[(c + 1) % len(points)]
             if(c1[0] != c2[0] or c1[1] != c2[1]):
-                newpoints += [c1]
+                without_duplicates += [c1]
+        
+        if(len(points) > 10):
+            points = without_duplicates.copy()
+            smooth = []
+            for c in range(len(points)):
+                cm2, cm1, c, cp1, cp2 = points[(c - 2) % len(points)], points[(c - 1) % len(points)], points[c], points[(c + 1) % len(points)], points[(c + 2) % len(points)]
+                smooth += [(9 * c + 4 * cm1 + 4 * cp1 + cm2 + cp2) / (9. + 2 * 4. + 2 * 1.)]
                 
-        return newpoints
+            points = np.array(smooth).astype(int)
+            without_duplicates = []
+            for c in range(len(points)):
+                c1, c2 = points[c], points[(c + 1) % len(points)]
+                if(c1[0] != c2[0] or c1[1] != c2[1]):
+                    without_duplicates += [c1]   
+                
+        return without_duplicates
         
     def contourFromPoints(self, points, shape):
-        points = self.checkPoints(points)
+        points = self.cleanPoints(points)
         array = np.zeros(shape)
         pts = []
         for c in range(len(points)):
             c1, c2 = points[c], points[(c + 1) % len(points)]
             for alpha in np.linspace(0, 1, 2*max(shape[0], shape[1])):
-                x, y = int(c1[0] + alpha * (c2[0] - c1[0])), int(c1[1] + alpha * (c2[1] - c1[1]))
+                x, y = int(c1[0] + alpha * (c2[0] - c1[0])) % self.shape[0], int(c1[1] + alpha * (c2[1] - c1[1])) % self.shape[1]
                 if(len(pts) == 0):pts += [[x, y]]
                 elif(pts[-1] != [x, y]):pts += [[x, y]]
                 array[x, y] = 1
-               
-        interior = np.zeros(shape)
+                
+        self.array, self.points = array.astype(int), np.array(pts)
+           
+    def computeInterior(self):
+        interior = np.zeros(self.shape)
         
-        for px in range(shape[0]):
-            cur = array[px, 0]
-            toAdd = np.zeros(shape)
-            for py in range(shape[1]):
-                if(array[px, py] == 1 and py != 0 and array[px, py - 1] == 0):
+        for px in range(self.shape[0]):
+            cur = self.array[px, 0]
+            toAdd = np.zeros(self.shape)
+            for py in range(self.shape[1]):
+                if(self.array[px, py] == 1 and py != 0 and self.array[px, py - 1] == 0):
                     cur = (cur + 1) % 2
                 toAdd[px, py] = cur
                 
             if(cur != 1):
                 interior += toAdd
                 
-        interior += array
+        interior += self.array
         interior = np.minimum(interior, 1)
-        self.array, self.interior, self.points = array, interior, np.array(pts)
+        self.interior = interior.astype(int)
     
     def computeNormals(self):
+        self.computeInterior()
+        
         normals = []
         for i in range(self.npoints):
             pm1, p, pp1 = self.points[(i - 1) % self.npoints], self.points[i], self.points[(i + 1) % self.npoints]
@@ -69,7 +92,7 @@ class Contour:
             #print(self.npoints, i, ni, pm1, p, pp1, pfrompn, pfrommn, self.interior[pfrompn[0], pfrompn[1]], self.interior[pfrommn[0], pfrommn[1]])
             if(self.interior[pfrompn[0] % self.shape[0], pfrompn[1] % self.shape[1]] == 0):normals += [ni]
             elif(self.interior[pfrommn[0] % self.shape[0], pfrommn[1] % self.shape[1]] == 0):normals += [- ni]
-            else:raise ValueError("PROBLEM")
+            else:normals += [np.zeros(2)]
             
         self.normals = np.array(normals)
         
@@ -92,6 +115,8 @@ class Contour:
     def get(self, param):
         if(param == "points"):return self.points
         elif(param == "interior"):return self.interior
+        elif(param == "array"):return self.points
+        elif(param == "normals"):return self.normals
         elif(param == "border_in"):
             border_in = []
             for i in range(self.npoints):
@@ -109,12 +134,28 @@ class Contour:
         else:raise ValueError("param unvalid for contour getter, param = " + str(param))
         
     def render(self):
-        plt.subplot(121)
-        plt.imshow(self.array, cmap = "gray")
-        plt.subplot(122)
-        plt.imshow(self.interior, cmap = "gray")
-        plt.show()
-        
+        if(debug):
+            plt.figure(figsize = (15, 5))
+            plt.subplot(131)
+            plt.imshow(self.array, cmap = "gray")
+            plt.title("Hull")
+            plt.subplot(132)
+            plt.imshow(self.interior, cmap = "gray")
+            plt.title("Mask")
+            plt.subplot(133)
+            im = np.array([self.array, (self.get("border_out")).array, (self.get("border_in")).array]).transpose(1, 2, 0)
+            print(im.shape)
+            plt.imshow(im.astype(np.float32), norm = None)
+            plt.title("Borders")
+            plt.show()
+        elif(verbose):
+            plt.figure(figsize = (10, 5))
+            plt.subplot(121)
+            plt.imshow(self.array, cmap = "gray")
+            plt.subplot(122)
+            plt.imshow(self.interior, cmap = "gray")
+            plt.show()
+            
 def testContour():
     
     shape = (50, 50)
