@@ -103,4 +103,4 @@ def testContour():
     plt.imshow(im.transpose(1, 2, 0))
     plt.show()
 
-testContour()
+#testContour()
