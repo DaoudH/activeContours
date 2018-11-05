@@ -56,7 +56,7 @@ class Contour:
             pfrompn = self.getPixelToNormal(p, ni)
             pfrommn = self.getPixelToNormal(p, - ni)
             
-            print(self.npoints, i, ni, pm1, p, pp1, pfrompn, pfrommn, self.interior[pfrompn[0], pfrompn[1]], self.interior[pfrommn[0], pfrommn[1]])
+            #print(self.npoints, i, ni, pm1, p, pp1, pfrompn, pfrommn, self.interior[pfrompn[0], pfrompn[1]], self.interior[pfrommn[0], pfrommn[1]])
             if(self.interior[pfrompn[0], pfrompn[1]] == 0):normals += [ni]
             elif(self.interior[pfrommn[0], pfrommn[1]] == 0):normals += [- ni]
             else:raise ValueError("PROBLEM")
@@ -93,12 +93,14 @@ def testContour():
     plt.show()
     
     outside = np.zeros(shape)
+    inside = np.zeros(shape)
     for i in range(contour.npoints):
-        p = contour.getPixelToNormal(contour.points[i], contour.normals[i])
-        outside[p[0], p[1]] = 1
-    
-    plt.imshow(2 * contour.array + outside, cmap = "gray")
-    
-    print(contour.points[:10])
-    print(contour.normals[:10])
-#testContour()
+        po = contour.getPixelToNormal(contour.points[i], contour.normals[i])
+        pi = contour.getPixelToNormal(contour.points[i], -contour.normals[i])
+        outside[po[0], po[1]] = 1
+        inside[pi[0], pi[1]] = 1
+    im = np.array([contour.array, outside, inside])
+    plt.imshow(im.transpose(1, 2, 0))
+    plt.show()
+
+testContour()
