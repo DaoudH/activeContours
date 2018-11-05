@@ -84,28 +84,11 @@ class Windows():
         self.lines = []
         
     def computeMask(self):
-        
-        contour = Contour(self.corners, (self.width, self.height))
-        
-        mask = np.zeros((self.width, self.height))
-        
-        for px in range(self.width):
-            cur = contour.array[0, px]
-            toAdd = np.zeros((self.width, self.height))
-            for py in range(self.height):
-                if(contour.array[py, px] == 1 and py != 0 and contour.array[py - 1, px] == 0):
-                    cur = (cur + 1) % 2
-                toAdd[px, py] = cur
-                
-            if(cur != 1):
-                mask += toAdd
-                
-        mask += contour.array.transpose()
-        self.mask = np.minimum(mask, 1).transpose()
-        self.contour = contour
-        
+        self.corners = np.array(self.corners)
+        self.contour = Contour(np.array([self.corners[:, 1], self.corners[:, 0]]).transpose(), (self.height, self.width))
+        self.mask = self.contour.interior
         if(verbose):
-            plt.figure(figsize = (10, 30))
+            plt.figure(figsize = (15, 30))
             plt.subplot(131)
             plt.imshow(self.contour.array, cmap = "gray")
             plt.title("Hull")
@@ -116,7 +99,7 @@ class Windows():
             if(self.n == 1):
                 plt.imshow(self.image * self.mask, cmap = "gray")
             else:
-                plt.imshow(self.image * np.array([self.mask for i in range(self.n)]).transpose(1, 2, 0))
+                plt.imshow(mycv2.cvtBGRtoRGB(self.image) * np.array([self.mask for i in range(self.n)]).transpose(1, 2, 0), norm = None)
             plt.title("Masked image")
             plt.show()
         
