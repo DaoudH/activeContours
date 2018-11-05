@@ -22,20 +22,16 @@ class Mask:
         else:
             self.n = image.shape[-1]
         self.image = image
-        self.contour, self.mask = self.initializeMask()
-        
-    def initializeMask(self):
-        windows = Windows(self.image, self.n)
-        return windows.contour, windows.mask
+        self.contour = Windows(self.image, self.n).contour
     
     def area(self):
-        return self.mask.sum() / (self.mask.shape[0] * self.mask.shape[0])
+        return self.contour.interior.sum() / (self.contour.shape[0] * self.contour.shape[0])
     
     def N(self, z):
         N = 0
         for i in range(self.image.shape[0]):
             for j in range(self.image.shape[1]):
-                if(self.mask[i, j]):
+                if(self.contour.interior[i, j]):
                     if(self.image[i, j] == z):
                         N += 1
         return N

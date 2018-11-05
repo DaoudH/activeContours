@@ -25,3 +25,5 @@ class ActiveContours():
     
     def run(self):
         self.mask = Mask(self.frames[0])
+        
+        

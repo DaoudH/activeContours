@@ -126,4 +126,4 @@ def testContour():
     contour.get("border_out").render()
     contour.get("border_in").render()
 
-testContour()
+#testContour()
