@@ -13,10 +13,21 @@ class Contour:
     
     def __init__(self, points, shape):
         self.contourFromPoints(points, shape)
+        self.shape= shape
         self.npoints = len(self.points)
         self.computeNormals()
         
+    def checkPoints(self, points):
+        newpoints = []
+        for c in range(len(points)):
+            c1, c2 = points[c], points[(c + 1) % len(points)]
+            if(c1[0] != c2[0] or c1[1] != c2[1]):
+                newpoints += [c1]
+                
+        return newpoints
+        
     def contourFromPoints(self, points, shape):
+        points = self.checkPoints(points)
         array = np.zeros(shape)
         pts = []
         for c in range(len(points)):
@@ -42,7 +53,6 @@ class Contour:
                 
         interior += array
         interior = np.minimum(interior, 1)
-        
         self.array, self.interior, self.points = array, interior, np.array(pts)
     
     def computeNormals(self):
@@ -57,8 +67,8 @@ class Contour:
             pfrommn = self.getPixelToNormal(p, - ni)
             
             #print(self.npoints, i, ni, pm1, p, pp1, pfrompn, pfrommn, self.interior[pfrompn[0], pfrompn[1]], self.interior[pfrommn[0], pfrommn[1]])
-            if(self.interior[pfrompn[0], pfrompn[1]] == 0):normals += [ni]
-            elif(self.interior[pfrommn[0], pfrommn[1]] == 0):normals += [- ni]
+            if(self.interior[pfrompn[0] % self.shape[0], pfrompn[1] % self.shape[1]] == 0):normals += [ni]
+            elif(self.interior[pfrommn[0] % self.shape[0], pfrommn[1] % self.shape[1]] == 0):normals += [- ni]
             else:raise ValueError("PROBLEM")
             
         self.normals = np.array(normals)
@@ -79,28 +89,39 @@ class Contour:
         elif(alpha >= 13 * step and  alpha < 15 * step):return p + np.array([-1, 1])#
         else:raise ValueError("Alpha unvalid, alpha = " + str(alpha))
         
+    def render(self):
+        plt.subplot(121)
+        plt.imshow(self.array, cmap = "gray")
+        plt.subplot(122)
+        plt.imshow(self.interior, cmap = "gray")
+        plt.show()
+        
 def testContour():
     
-    shape = (50, 40)
+    shape = (50, 50)
     points = [[15, 20], [35, 5], [20, 33]]
     
     contour = Contour(points, shape)
+    contour.render()
     
-    plt.subplot(121)
-    plt.imshow(contour.array, cmap = "gray")
-    plt.subplot(122)
-    plt.imshow(contour.interior, cmap = "gray")
-    plt.show()
-    
-    outside = np.zeros(shape)
-    inside = np.zeros(shape)
+    outside, inside = np.zeros(shape), np.zeros(shape)
+    Po, Pi = [], []
     for i in range(contour.npoints):
         po = contour.getPixelToNormal(contour.points[i], contour.normals[i])
         pi = contour.getPixelToNormal(contour.points[i], -contour.normals[i])
-        outside[po[0], po[1]] = 1
-        inside[pi[0], pi[1]] = 1
+        if(not contour.array[po[0], po[1]] and not contour.interior[po[0], po[1]]):
+            i
+            outside[po[0], po[1]] = 1
+            Po += [po]
+        if(not contour.array[pi[0], pi[1]] and contour.interior[pi[0], pi[1]]):
+            inside[pi[0], pi[1]] = 1
+            Pi += [pi]
+    
     im = np.array([contour.array, outside, inside])
     plt.imshow(im.transpose(1, 2, 0))
     plt.show()
+    
+    Contour(Po, shape).render()
+    Contour(Pi, shape).render()
 
-#testContour()
+testContour()
