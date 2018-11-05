@@ -21,42 +21,46 @@ class Contour:
         self.npoints = len(self.points)
         self.computeNormals()
         
-    def cleanPoints(self, points):
+    def removeDuplicatedPoints(self, points):
         without_duplicates = []
         for c in range(len(points)):
             c1, c2 = points[c], points[(c + 1) % len(points)]
             if(c1[0] != c2[0] or c1[1] != c2[1]):
                 without_duplicates += [c1]
-        
+        return without_duplicates
+    
+    def smoothPoints(self, points):
         if(len(points) > 10):
-            points = without_duplicates.copy()
             smooth = []
             for c in range(len(points)):
                 cm2, cm1, c, cp1, cp2 = points[(c - 2) % len(points)], points[(c - 1) % len(points)], points[c], points[(c + 1) % len(points)], points[(c + 2) % len(points)]
-                smooth += [(9 * c + 4 * cm1 + 4 * cp1 + cm2 + cp2) / (9. + 2 * 4. + 2 * 1.)]
+                k = np.array([0., 1., 2., 1., 0.])
+                smooth += [(k[0] * cm2 + k[1] * cm1 + k[2] * c + k[3] * cp1 + k[4] * cp2) / k.sum()]
                 
-            points = np.array(smooth).astype(int)
-            without_duplicates = []
-            for c in range(len(points)):
-                c1, c2 = points[c], points[(c + 1) % len(points)]
-                if(c1[0] != c2[0] or c1[1] != c2[1]):
-                    without_duplicates += [c1]   
-                
-        return without_duplicates
-        
+            return np.array(smooth).astype(int)
+        else:
+            return points
+    
+    def cleanPoints(self, points):
+        points = self.removeDuplicatedPoints(points)
+        points = self.smoothPoints(points)
+        points = self.removeDuplicatedPoints(points)
+        return points
+    
     def contourFromPoints(self, points, shape):
-        points = self.cleanPoints(points)
+        points = self.cleanPoints(points).copy()
         array = np.zeros(shape)
         pts = []
         for c in range(len(points)):
             c1, c2 = points[c], points[(c + 1) % len(points)]
             for alpha in np.linspace(0, 1, 2*max(shape[0], shape[1])):
                 x, y = int(c1[0] + alpha * (c2[0] - c1[0])) % self.shape[0], int(c1[1] + alpha * (c2[1] - c1[1])) % self.shape[1]
-                if(len(pts) == 0):pts += [[x, y]]
-                elif(pts[-1] != [x, y]):pts += [[x, y]]
+                #if(len(pts) == 0):pts += [[x, y]]
+                #elif(pts[-1] != [x, y]):pts += [[x, y]]
+                pts += [[x, y]]
                 array[x, y] = 1
                 
-        self.array, self.points = array.astype(int), np.array(pts)
+        self.array, self.points = array.astype(int), np.array(self.removeDuplicatedPoints(points).copy())
            
     def computeInterior(self):
         interior = np.zeros(self.shape)

@@ -19,13 +19,16 @@ debug = yaml.load(open("params.yaml"))["debug"]
 
 class Mask:
     
-    def __init__(self, image):
+    def __init__(self, image, contour = np.nan):
         if(len(image.shape) == 2):
             self.n = 1
         else:
             self.n = image.shape[-1]
         self.image = image
-        self.contour = Windows(self.image, self.n).contour
+        if(np.isnan(contour)):
+            self.contour = Windows(self.image, self.n).contour
+        else:
+            self.contour = contour
     
     def area(self):
         return self.contour.interior.sum() / (self.contour.shape[0] * self.contour.shape[0])

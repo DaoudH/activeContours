@@ -37,23 +37,22 @@ class ActiveContours():
         self.currentcontour = self.mask.contour
         
         RESULT = []
-        for i in range(0, 10):
+        for i in range(0, len(self.frames)):
             RESULT += [self.computeSF(i)]
         
     def computeSF(self, i):
         frame = self.frames[i]
-        
-        nchanges = 1
-        nite = 0
-        
-        
+                
         FD = np.zeros(self.shape)
         for px in range(self.shape[0]):
             for py in range(self.shape[1]):
                 FD[px, py] = self.mask.getDensity(frame[px, py])
+        plt.figure(figsize = (10, 5))
+        plt.subplot(121)
         plt.imshow(FD, cmap = "gray")
+        plt.subplot(122)
+        plt.imshow(FD > 0, cmap = "gray")
         plt.show()
-         
          
         """
         while(nchanges > 0 and nite < 10):
@@ -89,19 +88,19 @@ class ActiveContours():
             pi = newpoints[i].copy()
             ni = normals[i].copy()
             dc = self.mask.getDensity(frame[pi[0], pi[1]]) - self.mask.lambd
-            
+            nite = 0
             if(dc < 0):
-                while(dc < 0):
+                while(dc < 0 and nite < 20):
                     pi = self.currentcontour.getPixelToNormal(pi, - ni).copy() 
                     dc = self.mask.getDensity(frame[pi[0] % self.shape[0], pi[1] % self.shape[1]]) - self.mask.lambd
-            
+                    nite += 1
             else:
-                while(dc > 0):
+                while(dc > 0 and nite < 20):
                     pi = self.currentcontour.getPixelToNormal(pi, ni).copy() 
                     dc = self.mask.getDensity(frame[pi[0], pi[1]]) - self.mask.lambd
-                    
-            newpoints[i] = pi.copy()
-        
+                    nite += 1
+            if(nite < 20):newpoints[i] = pi.copy()
+        print(np.sum(np.abs(newpoints - self.currentcontour.get("points"))))
         self.currentcontour = Contour(newpoints, self.shape)
         if(PARAMS["verbose"]):self.currentcontour.render()
         return self.currentcontour
