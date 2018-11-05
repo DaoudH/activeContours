@@ -89,6 +89,25 @@ class Contour:
         elif(alpha >= 13 * step and  alpha < 15 * step):return p + np.array([-1, 1])#
         else:raise ValueError("Alpha unvalid, alpha = " + str(alpha))
         
+    def get(self, param):
+        if(param == "points"):return self.points
+        elif(param == "interior"):return self.interior
+        elif(param == "border_in"):
+            border_in = []
+            for i in range(self.npoints):
+                p = self.getPixelToNormal(self.points[i], - self.normals[i])
+                if(not self.array[p[0], p[1]] and self.interior[p[0], p[1]]):
+                    border_in += [p]
+            return Contour(border_in, self.shape)
+        elif(param == "border_out"):
+            border_out = []
+            for i in range(self.npoints):
+                p = self.getPixelToNormal(self.points[i], self.normals[i])
+                if(not self.array[p[0], p[1]] and not self.interior[p[0], p[1]]):
+                    border_out += [p]
+            return Contour(border_out, self.shape)
+        else:raise ValueError("param unvalid for contour getter, param = " + str(param))
+        
     def render(self):
         plt.subplot(121)
         plt.imshow(self.array, cmap = "gray")
@@ -104,24 +123,7 @@ def testContour():
     contour = Contour(points, shape)
     contour.render()
     
-    outside, inside = np.zeros(shape), np.zeros(shape)
-    Po, Pi = [], []
-    for i in range(contour.npoints):
-        po = contour.getPixelToNormal(contour.points[i], contour.normals[i])
-        pi = contour.getPixelToNormal(contour.points[i], -contour.normals[i])
-        if(not contour.array[po[0], po[1]] and not contour.interior[po[0], po[1]]):
-            i
-            outside[po[0], po[1]] = 1
-            Po += [po]
-        if(not contour.array[pi[0], pi[1]] and contour.interior[pi[0], pi[1]]):
-            inside[pi[0], pi[1]] = 1
-            Pi += [pi]
-    
-    im = np.array([contour.array, outside, inside])
-    plt.imshow(im.transpose(1, 2, 0))
-    plt.show()
-    
-    Contour(Po, shape).render()
-    Contour(Pi, shape).render()
+    contour.get("border_out").render()
+    contour.get("border_in").render()
 
 testContour()
