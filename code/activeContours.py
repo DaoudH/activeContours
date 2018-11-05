@@ -38,9 +38,9 @@ class ActiveContours():
         
         RESULT = []
         for i in range(0, len(self.frames)):
-            RESULT += [self.computeSF(i)]
+            RESULT += [self.computeSimpleFlow(i)]
         
-    def computeSF(self, i):
+    def computeSimpleFlow(self, i):
         frame = self.frames[i]
                 
         FD = np.zeros(self.shape)
@@ -59,8 +59,6 @@ class ActiveContours():
             nadded, nremoved = 0, 0
             newpoints = self.currentcontour.get("points").copy()
             normals = self.currentcontour.get("normals").copy()
-            
-
             
             for i in range(len(newpoints)):
                 dc = self.mask.getDensity(frame[newpoints[i][0], newpoints[i][1]]) - self.mask.lambd
@@ -90,16 +88,16 @@ class ActiveContours():
             dc = self.mask.getDensity(frame[pi[0], pi[1]]) - self.mask.lambd
             nite = 0
             if(dc < 0):
-                while(dc < 0 and nite < 20):
+                while(dc < 0 and nite < 50):
                     pi = self.currentcontour.getPixelToNormal(pi, - ni).copy() 
                     dc = self.mask.getDensity(frame[pi[0] % self.shape[0], pi[1] % self.shape[1]]) - self.mask.lambd
                     nite += 1
             else:
-                while(dc > 0 and nite < 20):
+                while(dc > 0 and nite < 50):
                     pi = self.currentcontour.getPixelToNormal(pi, ni).copy() 
                     dc = self.mask.getDensity(frame[pi[0], pi[1]]) - self.mask.lambd
                     nite += 1
-            if(nite < 20):newpoints[i] = pi.copy()
+            if(nite < 50):newpoints[i] = pi.copy()
         print(np.sum(np.abs(newpoints - self.currentcontour.get("points"))))
         self.currentcontour = Contour(newpoints, self.shape)
         if(PARAMS["verbose"]):self.currentcontour.render()

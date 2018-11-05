@@ -34,7 +34,7 @@ class Contour:
             smooth = []
             for c in range(len(points)):
                 cm2, cm1, c, cp1, cp2 = points[(c - 2) % len(points)], points[(c - 1) % len(points)], points[c], points[(c + 1) % len(points)], points[(c + 2) % len(points)]
-                k = np.array([0., 1., 2., 1., 0.])
+                k = np.array([1., 4., 9., 4., 1.])
                 smooth += [(k[0] * cm2 + k[1] * cm1 + k[2] * c + k[3] * cp1 + k[4] * cp2) / k.sum()]
                 
             return np.array(smooth).astype(int)
@@ -70,6 +70,17 @@ class Contour:
             toAdd = np.zeros(self.shape)
             for py in range(self.shape[1]):
                 if(self.array[px, py] == 1 and py != 0 and self.array[px, py - 1] == 0):
+                    cur = (cur + 1) % 2
+                toAdd[px, py] = cur
+                
+            if(cur != 1):
+                interior += toAdd
+                
+        for py in range(self.shape[1]):
+            cur = self.array[0, py]
+            toAdd = np.zeros(self.shape)
+            for px in range(self.shape[0]):
+                if(self.array[px, py] == 1 and px != 0 and self.array[px - 1, py] == 0):
                     cur = (cur + 1) % 2
                 toAdd[px, py] = cur
                 

@@ -44,11 +44,11 @@ class Mask:
         return N
     
     def computeDensity(self):
-        D = np.zeros(tuple([256 // PARAMS["activeContours"]["encodeColors"] for i in range(self.n)]))
+        D = np.zeros(tuple([256 // 2**(8 - PARAMS["activeContours"]["encodeColors"]) for i in range(self.n)]))
         for px in range(self.image.shape[0]):
             for py in range(self.image.shape[1]):
                 if(self.contour.interior[px, py]):
-                    c = self.image[px, py] // PARAMS["activeContours"]["encodeColors"]
+                    c = self.image[px, py] // 2**(8 - PARAMS["activeContours"]["encodeColors"])
                     if(self.n == 1):
                         D[c] += 1
                     elif(self.n == 3):
@@ -59,7 +59,7 @@ class Mask:
         self.lambd = 0.5 * np.min(self.D[self.D > 0])
         
     def getDensity(self, c):
-        c = c // PARAMS["activeContours"]["encodeColors"]
+        c = c // 2**(8 - PARAMS["activeContours"]["encodeColors"])
         return self.D[c[0], c[1], c[2]]
     
     def p(self, z):
