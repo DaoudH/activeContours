@@ -49,7 +49,8 @@ class ActiveContours():
         
     def computeSimpleFlow(self, i):
         frame = self.frames[i]
-                
+        
+        """
         FD = np.zeros(self.shape)
         for px in range(self.shape[0]):
             for py in range(self.shape[1]):
@@ -60,6 +61,7 @@ class ActiveContours():
         plt.subplot(122)
         plt.imshow(FD > 0, cmap = "gray")
         plt.show()
+        """
          
         """
         while(nchanges > 0 and nite < 10):
