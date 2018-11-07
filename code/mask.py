@@ -50,7 +50,7 @@ class Mask:
                 if(self.contour.interior[px, py]):
                     c = self.image[px, py] // 2**(8 - PARAMS["activeContours"]["encodeColors"])
                     if(self.n == 1):
-                        D[c] += 1
+                        D[int(c)] += 1
                     elif(self.n == 3):
                         D[c[0], c[1], c[2]] += 1
                     else:raise ValueError("Unvalid value for self.n = " + str(self.n))
@@ -60,7 +60,12 @@ class Mask:
         
     def getDensity(self, c):
         c = c // 2**(8 - PARAMS["activeContours"]["encodeColors"])
-        return self.D[c[0], c[1], c[2]]
+        if(self.n == 1):
+            return self.D[int(c)]
+        elif(self.n == 3):
+            return self.D[c[0], c[1], c[2]]
+        else:raise ValueError("Unvalid value for self.n = " + str(self.n))
+        
     
     def p(self, z):
         return self.N(z) / self.area
@@ -90,7 +95,10 @@ class Mask:
 class Windows():
     
     def __init__(self, image, n):
-        self.image = mycv2.cvtBGRtoRGB(image)
+        if(len(image.shape) == 3):
+            self.image = mycv2.cvtBGRtoRGB(image)
+        else:
+            self.image = image
         self.n = n
         # Création de la fenêtre principale (main window)
         Mywindows = tk.Tk()

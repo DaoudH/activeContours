@@ -48,4 +48,4 @@ def runTests():
     axes[2].set_title('Specification')
     axes[2].imshow(newFrame1,'gray')
 
-runTests()
+#runTests()

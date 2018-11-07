@@ -30,7 +30,7 @@ def demoMaskCreation():
 #demoMaskCreation()
 
 def demoVideo():
-    frames = vid.getFrames(PARAMS["data"]["video"]["movingcable"])
+    frames = vid.getFrames(PARAMS["data"]["video"]["movingsquare"])
     mycv2.show(frames[0])
     
     algo = ActiveContours(frames)

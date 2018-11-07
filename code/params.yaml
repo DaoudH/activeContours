@@ -4,10 +4,11 @@ data:
         
     video:
         movingcable: ../data/movingcable.mp4
+        movingsquare: ../data/movingsquare.mp4
         
 activeContours:
     maxwidth: 1000
-    encodeColors: 5
+    encodeColors: 7
         
 render:
     maxwidth: 200

@@ -13,6 +13,7 @@ import mycv2 as mycv2
 import video as vid
 import cv2 as cv2
 from contour import Contour
+from specHist import SpecHist
 import matplotlib.pyplot as plt
 import numpy as np
 import yaml
@@ -22,10 +23,16 @@ class ActiveContours():
     
     def __init__(self, frames):
         self.frames = self.preprocess(frames)
-        self.shape = self.frames[0].shape[:-1]
+        if(len(self.frames[0].shape) == 2):
+            self.shape = self.frames[0].shape
+        elif(len(self.frames[0].shape) == 3):
+            self.shape = self.frames[0].shape[:-1]
+        else:
+            raise ValueError("Frames shapes unvalid : " + str(self.frames[0].shape))
         
     def preprocess(self, frames):
-        return [cv2.blur(mycv2.resize(image, PARAMS["activeContours"]["maxwidth"]), (5, 5)) for image in frames]
+        specification = SpecHist(frames[0])        
+        return [cv2.blur(mycv2.resize(specification.specify(image), PARAMS["activeContours"]["maxwidth"]), (5, 5)) for image in frames]
     
     def run(self):
         self.mask = Mask(self.frames[0])
