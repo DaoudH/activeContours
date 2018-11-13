@@ -59,8 +59,7 @@ class Contour:
                 #elif(pts[-1] != [x, y]):pts += [[x, y]]
                 pts += [[x, y]]
                 array[x, y] = 1
-                
-        self.array, self.points = array.astype(int), np.array(self.removeDuplicatedPoints(points).copy())
+        self.array, self.points = array.astype(int), np.array(self.removeDuplicatedPoints(pts).copy())
            
     def computeInterior(self):
         interior = np.zeros(self.shape)

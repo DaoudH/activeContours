@@ -21,8 +21,8 @@ PARAMS = yaml.load(open("params.yaml"))
 
 class ActiveContours():
     
-    def __init__(self, frames):
-        self.frames = self.preprocess(frames)
+    def __init__(self, frames, spechist = False):
+        self.frames = self.preprocess(frames, spechist)
         if(len(self.frames[0].shape) == 2):
             self.shape = self.frames[0].shape
         elif(len(self.frames[0].shape) == 3):
@@ -30,9 +30,12 @@ class ActiveContours():
         else:
             raise ValueError("Frames shapes unvalid : " + str(self.frames[0].shape))
         
-    def preprocess(self, frames):
-        specification = SpecHist(frames[0])        
-        return [cv2.blur(mycv2.resize(specification.specify(image), PARAMS["activeContours"]["maxwidth"]), (5, 5)) for image in frames]
+    def preprocess(self, frames, spechist = False):
+        if(spechist):
+            specification = SpecHist(frames[0])        
+            return [cv2.blur(mycv2.resize(specification.specify(image), PARAMS["activeContours"]["maxwidth"]), (5, 5)) for image in frames]
+        else:
+            return [cv2.blur(mycv2.resize(image, PARAMS["activeContours"]["maxwidth"]), (5, 5)) for image in frames]
     
     def run(self):
         self.mask = Mask(self.frames[0])
@@ -90,11 +93,23 @@ class ActiveContours():
         
         newpoints = self.currentcontour.get("points").copy()
         normals = self.currentcontour.get("normals").copy()
+        print(len(newpoints))
         
         for i in range(len(newpoints)):
             pi = newpoints[i].copy()
             ni = normals[i].copy()
-            dc = self.mask.getDensity(frame[pi[0], pi[1]]) - self.mask.lambd
+            
+            """
+            nax = 3
+            DC = np.zeros(2 * nax + 1)
+            Pi = np.zeros((2 * nax + 1, 2))
+            
+            DC[nax] = self.mask.getDensity(frame[pi[0], pi[1]]) - self.mask.lambd
+            Pi[nax] += pi
+            print(DC)
+            print(Pi)
+            """
+            
             nite = 0
             if(dc < 0):
                 while(dc < 0 and nite < 50):
@@ -107,7 +122,6 @@ class ActiveContours():
                     dc = self.mask.getDensity(frame[pi[0], pi[1]]) - self.mask.lambd
                     nite += 1
             if(nite < 50):newpoints[i] = pi.copy()
-        print(np.sum(np.abs(newpoints - self.currentcontour.get("points"))))
         self.currentcontour = Contour(newpoints, self.shape)
         if(PARAMS["verbose"]):self.currentcontour.render()
         return self.currentcontour
