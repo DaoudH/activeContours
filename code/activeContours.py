@@ -33,9 +33,9 @@ class ActiveContours():
     def preprocess(self, frames, spechist = False):
         if(spechist):
             specification = SpecHist(frames[0])        
-            return [cv2.blur(mycv2.resize(specification.specify(image), PARAMS["activeContours"]["maxwidth"]), (5, 5)) for image in frames]
+            return [cv2.blur(mycv2.resize(specification.specify(image), PARAMS["activeContours"]["maxwidth"]), (7, 7)) for image in frames]
         else:
-            return [cv2.blur(mycv2.resize(image, PARAMS["activeContours"]["maxwidth"]), (5, 5)) for image in frames]
+            return [cv2.blur(mycv2.resize(image, PARAMS["activeContours"]["maxwidth"]), (7, 7)) for image in frames]
     
     def run(self):
         self.mask = Mask(self.frames[0])
@@ -52,7 +52,8 @@ class ActiveContours():
         
     def computeSimpleFlow(self, i):
         frame = self.frames[i]
-        
+        plt.imshow(frame)
+        plt.show()
         """
         FD = np.zeros(self.shape)
         for px in range(self.shape[0]):
@@ -94,22 +95,70 @@ class ActiveContours():
         newpoints = self.currentcontour.get("points").copy()
         normals = self.currentcontour.get("normals").copy()
         print(len(newpoints))
-        
-        for i in range(len(newpoints)):
+        findeps = []
+        findepm1 = 0
+        changepoints = []
+        #for i in range(len(newpoints)):
+        for i in np.linspace(0, len(newpoints) - 1, 25).astype(int):
             pi = newpoints[i].copy()
             ni = normals[i].copy()
             
-            """
-            nax = 3
+            
+            nax = 25
             DC = np.zeros(2 * nax + 1)
             Pi = np.zeros((2 * nax + 1, 2))
             
-            DC[nax] = self.mask.getDensity(frame[pi[0], pi[1]]) - self.mask.lambd
+            DC[nax] = np.sign(self.mask.getDensity(frame[pi[0], pi[1]]) - self.mask.lambd)
             Pi[nax] += pi
-            print(DC)
-            print(Pi)
-            """
             
+            for j in range(1, nax + 1):
+                temppi = self.currentcontour.getPixelToNormal(Pi[nax + j - 1], ni).copy().astype(int)
+                Pi[nax + j] = temppi.copy()
+                tempdc = self.mask.getDensity(frame[temppi[0] % self.shape[0], temppi[1] % self.shape[1]]) - self.mask.lambd
+                DC[nax + j] += np.sign(tempdc)
+                
+                temppi = self.currentcontour.getPixelToNormal(Pi[nax - j + 1], - ni).copy().astype(int)
+                Pi[nax - j] = temppi.copy()
+                tempdc = self.mask.getDensity(frame[temppi[0] % self.shape[0], temppi[1] % self.shape[1]]) - self.mask.lambd
+                DC[nax - j] += np.sign(tempdc)
+                
+            dep = []
+            for j in range(nax):
+                if(DC[j] < 0 and DC[j + 1] > 0):
+                    dep += [j + 1]
+                    
+            for j in range(1, nax + 1):
+                if(DC[nax + j] < 0 and DC[nax + j - 1] > 0):
+                    dep += [nax + j - 1]
+            
+            if(np.sum(DC) == len(DC)):
+                dep += [len(DC) - 1]
+            if(np.sum(DC) == -len(DC)):
+                dep += [0]
+            if(len(dep) == 0):
+                dep += [nax]
+            
+            dep = np.array(dep)
+            if(np.sum(dep < 25) > np.sum(dep > 25)):
+                dep = dep[dep < 25]
+            elif(np.sum(dep < 25) < np.sum(dep > 25)):
+                dep = dep[dep > 25]
+            else:
+                dep = [25]
+                
+            findep = int(np.median(dep))
+            
+            if(i != 0):
+                if(findep > findepm1 + 5):
+                    findep = findepm1 + 5
+                elif(findep < findepm1 - 5):
+                    findep = findepm1 - 5
+            findepm1 = findep
+            findeps += [findep]
+            #newpoints[i] = Pi[findep].copy()
+            changepoints += [Pi[findep].copy()]
+            """
+            dc = self.mask.getDensity(frame[pi[0], pi[1]]) - self.mask.lambd
             nite = 0
             if(dc < 0):
                 while(dc < 0 and nite < 50):
@@ -122,6 +171,9 @@ class ActiveContours():
                     dc = self.mask.getDensity(frame[pi[0], pi[1]]) - self.mask.lambd
                     nite += 1
             if(nite < 50):newpoints[i] = pi.copy()
-        self.currentcontour = Contour(newpoints, self.shape)
+            """
+        plt.plot(np.arange(len(findeps)), np.array(findeps) - 25)
+        plt.show()
+        self.currentcontour = Contour(changepoints, self.shape)
         if(PARAMS["verbose"]):self.currentcontour.render()
         return self.currentcontour
