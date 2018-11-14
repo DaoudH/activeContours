@@ -9,6 +9,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 import yaml
+import time
 verbose = yaml.load(open("params.yaml"))["verbose"]
 debug = yaml.load(open("params.yaml"))["debug"]
 
@@ -64,6 +65,8 @@ class Contour:
     def computeInterior(self):
         interior = np.zeros(self.shape)
         
+        t = time.time()
+        print("start compute interior")
         for px in range(self.shape[0]):
             cur = self.array[px, 0]
             toAdd = np.zeros(self.shape)
@@ -85,7 +88,7 @@ class Contour:
                 
             if(cur != 1):
                 interior += toAdd
-                
+        print("compute interior", time.time() - t, "secs")     
         interior += self.array
         interior = np.minimum(interior, 1)
         self.interior = interior.astype(int)

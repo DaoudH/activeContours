@@ -11,7 +11,7 @@ sys.path.append('utils')
 from mask import Mask
 import mycv2 as mycv2
 import video as vid
-import cv2 as cv2
+import cv2
 from contour import Contour
 from specHist import SpecHist
 import matplotlib.pyplot as plt
@@ -21,7 +21,8 @@ PARAMS = yaml.load(open("params.yaml"))
 
 class ActiveContours():
     
-    def __init__(self, frames, spechist = False):
+    def __init__(self, frames, path, spechist = False):
+        self.path = path
         self.frames = self.preprocess(frames, spechist)
         if(len(self.frames[0].shape) == 2):
             self.shape = self.frames[0].shape
@@ -49,6 +50,25 @@ class ActiveContours():
         RESULT = []
         for i in range(0, len(self.frames)):
             RESULT += [self.computeSimpleFlow(i)]
+        print(RESULT[0].shape, "SHAPE   ", vid.getFPS(self.path), "FPS")
+        print([r.shape for r in RESULT])
+        
+        shape = (int(RESULT[0].shape[0] * 2), int(RESULT[0].shape[1]))
+        print(shape)
+        out = cv2.VideoWriter('output.mp4', cv2.VideoWriter_fourcc(*'XVID'),
+                              vid.getFPS(self.path), shape)
+        
+        for f, res in zip(self.frames, RESULT):
+            res3 = np.array([res, res, res]).transpose(1, 2, 0) * 255
+            print(res3.shape, f.shape)
+            newf = np.uint8(np.concatenate([f, res3], axis = 0))
+            print(newf.shape, np.min(res3), np.max(res3), np.min(f), np.max(f))
+            plt.imshow(newf)
+            plt.show()
+            
+            out.write(newf.copy())
+                
+        out.release()
         
     def computeSimpleFlow(self, i):
         frame = self.frames[i]
@@ -121,9 +141,10 @@ class ActiveContours():
         #findepm1 = 0
         changepoints = []
         #for i in range(len(newpoints)):
-        nbloc = 5
+        nbloc = 10
         nax = 25
-        for i in np.linspace(0, len(newpoints) - 1, 25).astype(int):
+        nnewpoints = 25
+        for i in np.linspace(0, len(newpoints), nnewpoints + 1).astype(int)[:-1]:
             findepii = []
             for ii in range(-nbloc, nbloc + 1):
                 pi = newpoints[(i + ii) % len(newpoints)].copy()
@@ -157,7 +178,7 @@ class ActiveContours():
                 else:
                     dep = [25]
                     
-                findepii += [int(np.median(dep))]
+                findepii += [np.median(dep)]
                 
             findep = int(np.median(findepii))
             
@@ -192,4 +213,4 @@ class ActiveContours():
         plt.show()
         self.currentcontour = Contour(changepoints, self.shape)
         if(PARAMS["verbose"]):self.currentcontour.render()
-        return self.currentcontour
+        return self.currentcontour.interior

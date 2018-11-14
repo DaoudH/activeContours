@@ -7,7 +7,7 @@ data:
         movingsquare: ../data/movingsquare.mp4
         
 activeContours:
-    maxwidth: 1000
+    maxwidth: 500
     encodeColors: 4
         
 render:
