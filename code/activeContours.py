@@ -92,19 +92,8 @@ class ActiveContours():
             #if(PARAMS["verbose"]):self.currentcontour.render()
         """
         
-        newpoints = self.currentcontour.get("points").copy()
-        normals = self.currentcontour.get("normals").copy()
-        print(len(newpoints))
-        findeps = []
-        findepm1 = 0
-        changepoints = []
-        #for i in range(len(newpoints)):
-        for i in np.linspace(0, len(newpoints) - 1, 25).astype(int):
-            pi = newpoints[i].copy()
-            ni = normals[i].copy()
+        def getPiDC(pi, ni, nax):
             
-            
-            nax = 25
             DC = np.zeros(2 * nax + 1)
             Pi = np.zeros((2 * nax + 1, 2))
             
@@ -121,42 +110,69 @@ class ActiveContours():
                 Pi[nax - j] = temppi.copy()
                 tempdc = self.mask.getDensity(frame[temppi[0] % self.shape[0], temppi[1] % self.shape[1]]) - self.mask.lambd
                 DC[nax - j] += np.sign(tempdc)
+            
+            return Pi, DC
+        
+        
+        newpoints = self.currentcontour.get("points").copy()
+        normals = self.currentcontour.get("normals").copy()
+        print(len(newpoints))
+        findeps = []
+        #findepm1 = 0
+        changepoints = []
+        #for i in range(len(newpoints)):
+        nbloc = 5
+        nax = 25
+        for i in np.linspace(0, len(newpoints) - 1, 25).astype(int):
+            findepii = []
+            for ii in range(-nbloc, nbloc + 1):
+                pi = newpoints[(i + ii) % len(newpoints)].copy()
+                ni = normals[(i + ii) % len(normals)].copy()
                 
-            dep = []
-            for j in range(nax):
-                if(DC[j] < 0 and DC[j + 1] > 0):
-                    dep += [j + 1]
+                Pi, DC = getPiDC(pi, ni, nax)
+                if(ii == 0):
+                    Pi0 = Pi.copy()
+                
+                dep = []
+                for j in range(nax):
+                    if(DC[j] < 0 and DC[j + 1] > 0):
+                        dep += [j + 1]
+                        
+                for j in range(1, nax + 1):
+                    if(DC[nax + j] < 0 and DC[nax + j - 1] > 0):
+                        dep += [nax + j - 1]
+            
+                if(np.sum(DC) == len(DC)):
+                    dep += [len(DC) - 1]
+                if(np.sum(DC) == -len(DC)):
+                    dep += [0]
+                if(len(dep) == 0):
+                    dep += [nax]
+                
+                dep = np.array(dep)
+                if(np.sum(dep < 25) > np.sum(dep > 25)):
+                    dep = dep[dep < 25]
+                elif(np.sum(dep < 25) < np.sum(dep > 25)):
+                    dep = dep[dep > 25]
+                else:
+                    dep = [25]
                     
-            for j in range(1, nax + 1):
-                if(DC[nax + j] < 0 and DC[nax + j - 1] > 0):
-                    dep += [nax + j - 1]
-            
-            if(np.sum(DC) == len(DC)):
-                dep += [len(DC) - 1]
-            if(np.sum(DC) == -len(DC)):
-                dep += [0]
-            if(len(dep) == 0):
-                dep += [nax]
-            
-            dep = np.array(dep)
-            if(np.sum(dep < 25) > np.sum(dep > 25)):
-                dep = dep[dep < 25]
-            elif(np.sum(dep < 25) < np.sum(dep > 25)):
-                dep = dep[dep > 25]
-            else:
-                dep = [25]
+                findepii += [int(np.median(dep))]
                 
-            findep = int(np.median(dep))
+            findep = int(np.median(findepii))
             
+            """
             if(i != 0):
                 if(findep > findepm1 + 5):
                     findep = findepm1 + 5
                 elif(findep < findepm1 - 5):
                     findep = findepm1 - 5
             findepm1 = findep
+            """
+            
             findeps += [findep]
             #newpoints[i] = Pi[findep].copy()
-            changepoints += [Pi[findep].copy()]
+            changepoints += [Pi0[findep].copy()]
             """
             dc = self.mask.getDensity(frame[pi[0], pi[1]]) - self.mask.lambd
             nite = 0
