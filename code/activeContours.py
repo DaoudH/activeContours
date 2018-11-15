@@ -55,25 +55,25 @@ class ActiveContours():
         
         shape = (int(RESULT[0].shape[0] * 2), int(RESULT[0].shape[1]))
         print(shape)
-        out = cv2.VideoWriter('output.mp4', cv2.VideoWriter_fourcc(*'XVID'),
-                              vid.getFPS(self.path), shape)
+        out = cv2.VideoWriter('output.avi', cv2.VideoWriter_fourcc(*'XVID'),
+                              vid.getFPS(self.path), (512, 512))
         
+        print(vid.getFPS(self.path), shape)
         for f, res in zip(self.frames, RESULT):
             res3 = np.array([res, res, res]).transpose(1, 2, 0) * 255
-            print(res3.shape, f.shape)
-            newf = np.uint8(np.concatenate([f, res3], axis = 0))
-            print(newf.shape, np.min(res3), np.max(res3), np.min(f), np.max(f))
-            plt.imshow(newf)
+            newf = cv2.resize(np.uint8(np.concatenate([f, res3], axis = 0)), (512, 512))
+            plt.imshow(newf[:, :, ::-1])
             plt.show()
             
-            out.write(newf.copy())
+            out.write(newf)
                 
         out.release()
         
     def computeSimpleFlow(self, i):
+        print("computeSimpleFlow", i, "     ", int(100 * i / len(self.frames)), "%")
         frame = self.frames[i]
-        plt.imshow(frame)
-        plt.show()
+        #plt.imshow(frame[:, :, ::-1])
+        #plt.show()
         """
         FD = np.zeros(self.shape)
         for px in range(self.shape[0]):
@@ -209,8 +209,8 @@ class ActiveContours():
                     nite += 1
             if(nite < 50):newpoints[i] = pi.copy()
             """
-        plt.plot(np.arange(len(findeps)), np.array(findeps) - 25)
-        plt.show()
+        #plt.plot(np.arange(len(findeps)), np.array(findeps) - 25)
+        #plt.show()
         self.currentcontour = Contour(changepoints, self.shape)
         if(PARAMS["verbose"]):self.currentcontour.render()
-        return self.currentcontour.interior
+        return self.currentcontour.interior.copy()
