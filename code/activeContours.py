@@ -134,20 +134,20 @@ class ActiveContours():
             return Pi, DC
         
         
-        newpoints = self.currentcontour.get("points").copy()
+        points = self.currentcontour.get("points").copy()
         normals = self.currentcontour.get("normals").copy()
-        print(len(newpoints))
+        print(len(points))
         findeps = []
         #findepm1 = 0
         changepoints = []
         #for i in range(len(newpoints)):
         nbloc = 10
         nax = 25
-        nnewpoints = 25
-        for i in np.linspace(0, len(newpoints), nnewpoints + 1).astype(int)[:-1]:
+        nnewpoints = max(25, int(0.1 * len(points)))
+        for i in np.linspace(0, len(points), nnewpoints + 1).astype(int)[:-1]:
             findepii = []
             for ii in range(-nbloc, nbloc + 1):
-                pi = newpoints[(i + ii) % len(newpoints)].copy()
+                pi = points[(i + ii) % len(points)].copy()
                 ni = normals[(i + ii) % len(normals)].copy()
                 
                 Pi, DC = getPiDC(pi, ni, nax)
