@@ -8,7 +8,7 @@ data:
         
 activeContours:
     maxwidth: 500
-    encodeColors: 4
+    encodeColors: 8
         
 render:
     maxwidth: 200

@@ -19,13 +19,13 @@ debug = yaml.load(open("params.yaml"))["debug"]
 
 class Mask:
     
-    def __init__(self, image, contour = np.nan):
+    def __init__(self, image, contour = None):
         if(len(image.shape) == 2):
             self.n = 1
         else:
             self.n = image.shape[-1]
         self.image = image
-        if(np.isnan(contour)):
+        if(contour is None):
             self.contour = Windows(self.image, self.n).contour
         else:
             self.contour = contour

@@ -62,8 +62,8 @@ class ActiveContours():
         for f, res in zip(self.frames, RESULT):
             res3 = np.array([res, res, res]).transpose(1, 2, 0) * 255
             newf = cv2.resize(np.uint8(np.concatenate([f, res3], axis = 0)), (512, 512))
-            plt.imshow(newf[:, :, ::-1])
-            plt.show()
+            #plt.imshow(newf[:, :, ::-1])
+            #plt.show()
             
             out.write(newf)
                 
@@ -212,5 +212,6 @@ class ActiveContours():
         #plt.plot(np.arange(len(findeps)), np.array(findeps) - 25)
         #plt.show()
         self.currentcontour = Contour(changepoints, self.shape)
+        
         if(PARAMS["verbose"]):self.currentcontour.render()
         return self.currentcontour.interior.copy()

@@ -34,7 +34,7 @@ def demoVideo():
     frames = vid.getFrames(path)
     mycv2.show(frames[0])
     
-    algo = ActiveContours(frames, path)
+    algo = ActiveContours(frames, path, spechist = False)
     algo.run()
     
 demoVideo()
