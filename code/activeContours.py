@@ -171,12 +171,12 @@ class ActiveContours():
                     dep += [nax]
                 
                 dep = np.array(dep)
-                if(np.sum(dep < 25) > np.sum(dep > 25)):
-                    dep = dep[dep < 25]
-                elif(np.sum(dep < 25) < np.sum(dep > 25)):
-                    dep = dep[dep > 25]
+                if(np.sum(dep < nax) > np.sum(dep > nax)):
+                    dep = dep[dep < nax]
+                elif(np.sum(dep < nax) < np.sum(dep > nax)):
+                    dep = dep[dep > nax]
                 else:
-                    dep = [25]
+                    dep = [nax]
                     
                 findepii += [np.median(dep)]
                 
