@@ -30,7 +30,8 @@ def demoMaskCreation():
 #demoMaskCreation()
 
 def demoVideo():
-    path = PARAMS["data"]["video"]["movingsquare"]
+    #path = PARAMS["data"]["video"]["movingsquare"]
+    path = "test.mp4"
     frames = vid.getFrames(path)
     mycv2.show(frames[0])
     

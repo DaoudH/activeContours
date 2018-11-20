@@ -16,7 +16,7 @@ def getFrames(path):
     success,image = vidcap.read()   #Reads the video
     frames = [image]    #Gets the frames
     while success:  #Read the frames frame by frame
-        success,image = vidcap.read()   
+        success,image = vidcap.read()
         frames += [image]   
     return frames[:-1] #Returns the frames
 

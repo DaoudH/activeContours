@@ -36,7 +36,8 @@ class ActiveContours():
             specification = SpecHist(frames[0])        
             return [cv2.blur(mycv2.resize(specification.specify(image), PARAMS["activeContours"]["maxwidth"]), (7, 7)) for image in frames]
         else:
-            return [cv2.blur(mycv2.resize(image, PARAMS["activeContours"]["maxwidth"]), (7, 7)) for image in frames]
+            self.noblurframes = [mycv2.resize(image, PARAMS["activeContours"]["maxwidth"]) for image in frames]
+            return [cv2.blur(image, (7, 7)) for image in self.noblurframes]
     
     def run(self):
         self.mask = Mask(self.frames[0])
@@ -59,7 +60,7 @@ class ActiveContours():
                               vid.getFPS(self.path), (512, 512))
         
         print(vid.getFPS(self.path), shape)
-        for f, res in zip(self.frames, RESULT):
+        for f, res in zip(self.noblurframes, RESULT):
             res3 = np.array([res, res, res]).transpose(1, 2, 0) * 255
             newf = cv2.resize(np.uint8(np.concatenate([f, res3], axis = 0)), (512, 512))
             #plt.imshow(newf[:, :, ::-1])
@@ -143,7 +144,7 @@ class ActiveContours():
         #for i in range(len(newpoints)):
         nbloc = 10
         nax = 25
-        nnewpoints = max(25, int(0.1 * len(points)))
+        nnewpoints = max(25, int(0.005 * len(points)))
         for i in np.linspace(0, len(points), nnewpoints + 1).astype(int)[:-1]:
             findepii = []
             for ii in range(-nbloc, nbloc + 1):
