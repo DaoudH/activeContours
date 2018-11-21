@@ -143,8 +143,8 @@ class ActiveContours():
         changepoints = []
         #for i in range(len(newpoints)):
         nbloc = 10
-        nax = 25
-        nnewpoints = max(25, int(0.005 * len(points)))
+        nax = 10
+        nnewpoints = max(10, int(0.05 * len(points)))
         for i in np.linspace(0, len(points), nnewpoints + 1).astype(int)[:-1]:
             findepii = []
             for ii in range(-nbloc, nbloc + 1):
