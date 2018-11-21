@@ -5,6 +5,9 @@ data:
     video:
         movingcable: ../data/movingcable.mp4
         movingsquare: ../data/movingsquare.mp4
+        echocard1: ../data/med.mov
+        echocard2: ../data/med2.mov
+        
         
 activeContours:
     maxwidth: 500
